@@ -15,7 +15,7 @@
   -->
 <!doctype html>
 
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head>
     <!--/*/ <th:block th:include="fragments/head :: head"/> /*/-->
 </head>
@@ -28,11 +28,11 @@
             <img width="300px" src="/images/OktaLogo.png"/>
         </div>
 
-        <h3 th:inline="text">Hello, [[${principal.name}]]!</h3>
+        <h3 th:inline="text">Hello, <span sec:authentication="principal">Bob</span></h3>
 
         <a href="/users" class="btn btn-primary">Users Only</a>
         <a href="/admins" class="btn btn-warning">Admins Only</a>
-        <button id="logout" type="button" class="btn btn-danger">Logout</button>
+        <a href="#" id="logout" class="btn btn-danger">Logout</a>
     </div>
 </div>
 
@@ -45,7 +45,7 @@
             redirectUri: [[${appProperties.redirectUri}]],
             authParams: {
                 issuer: [[${appProperties.issuer}]],
-                responseType: ['id_token', 'token']
+                responseType: ['token']
             }
         };
         window.oktaSignIn = new OktaSignIn(data);

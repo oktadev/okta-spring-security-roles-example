@@ -33,13 +33,13 @@
             redirectUri: [[${appProperties.redirectUri}]],
             authParams: {
                 issuer: [[${appProperties.issuer}]],
-                responseType: ['id_token', 'token']
+                responseType: ['token']
             }
         };
         window.oktaSignIn = new OktaSignIn(data);
 
         // Check if we already have an access token
-        var token = oktaSignIn.tokenManager.get('my_access_token');
+        var token = oktaSignIn.tokenManager.get('token');
         if (token) {
             window.location.href = "/authenticated";
         } else {
@@ -56,11 +56,7 @@
                 if (response.status === 'SUCCESS') {
 
                     // for our example we have the id token and the access token
-                    oktaSignIn.tokenManager.add('my_id_token', response[0]);
-                    oktaSignIn.tokenManager.add('my_access_token', response[1]);
-
-                    // hide the widget
-                    oktaSignIn.hide();
+                    oktaSignIn.tokenManager.add('token', response[0]);
 
                     if (!document.location.protocol.startsWith('https')) {
                         console.log(
@@ -69,7 +65,7 @@
                             'https://tools.ietf.org/html/rfc6750'
                         );
                     }
-                    document.cookie = 'access_token=' + oktaSignIn.tokenManager.get('my_access_token').accessToken;
+                    document.cookie = 'access_token=' + oktaSignIn.tokenManager.get('token').accessToken;
                     document.location.href = "/authenticated";
                 }
             },

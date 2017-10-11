@@ -32,9 +32,8 @@ public class SecureController {
     protected AppProperties appProperties;
 
     @RequestMapping("/authenticated")
-    public String authenticated(Principal principal, Model model) {
+    public String authenticated(Model model) {
         model.addAttribute("appProperties", appProperties);
-        model.addAttribute("principal", principal);
         return "authenticated";
     }
 
