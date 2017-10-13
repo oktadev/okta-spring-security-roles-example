@@ -25,8 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class HomeController {
 
+    private AppProperties appProperties;
+
     @Autowired
-    protected AppProperties appProperties;
+    public HomeController(AppProperties appProperties) {
+        this.appProperties = appProperties;
+    }
 
     @RequestMapping("/")
     public String home() {

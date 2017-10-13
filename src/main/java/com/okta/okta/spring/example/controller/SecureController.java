@@ -28,8 +28,12 @@ import java.security.Principal;
 @Controller
 public class SecureController {
 
+    private AppProperties appProperties;
+
     @Autowired
-    protected AppProperties appProperties;
+    public SecureController(AppProperties appProperties) {
+        this.appProperties = appProperties;
+    }
 
     @RequestMapping("/authenticated")
     public String authenticated(Model model) {

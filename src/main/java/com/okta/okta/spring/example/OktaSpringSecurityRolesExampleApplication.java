@@ -41,8 +41,12 @@ public class OktaSpringSecurityRolesExampleApplication {
 
     private final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
 
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
+
     @Autowired
-    CustomAccessDeniedHandler customAccessDeniedHandler;
+    public OktaSpringSecurityRolesExampleApplication(CustomAccessDeniedHandler customAccessDeniedHandler) {
+        this.customAccessDeniedHandler = customAccessDeniedHandler;
+    }
 
     @EnableGlobalMethodSecurity(prePostEnabled = true)
     protected static class GlobalSecurityConfiguration extends GlobalMethodSecurityConfiguration {
