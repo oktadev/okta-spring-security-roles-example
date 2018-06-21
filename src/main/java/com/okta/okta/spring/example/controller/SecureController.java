@@ -1,7 +1,7 @@
 package com.okta.okta.spring.example.controller;
 
 /*
-Copyright 2017 Okta, Inc.
+Copyright 2018 Okta, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import com.okta.spring.config.OktaClientProperties;
-import com.okta.spring.config.OktaOAuth2Properties;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,14 +24,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class SecureController {
 
     public static final String AUTHENTICATED_PATH = "/authenticated";
-
-    private final OktaOAuth2Properties oktaOAuth2Properties;
-    private final OktaClientProperties oktaClientProperties;
-
-    public SecureController(OktaOAuth2Properties oktaOAuth2Properties, OktaClientProperties oktaClientProperties) {
-        this.oktaOAuth2Properties = oktaOAuth2Properties;
-        this.oktaClientProperties = oktaClientProperties;
-    }
 
     @RequestMapping(AUTHENTICATED_PATH)
     @PreAuthorize("#oauth2.hasScope('openid')")

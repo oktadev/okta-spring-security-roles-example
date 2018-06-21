@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Okta, Inc.
+# Copyright 2018 Okta, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,11 +19,22 @@ logging:
     root: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
+server:
+  port: 8080
+  servlet:
+      session:
+        tracking-modes: cookie
 okta:
-  oauth:
-    baseUrl: <your okta tenant>
+  client:
+    orgUrl: <your okta tenant>
+  oauth2:
     issuer: https://<your okta tenant>/oauth2/<authorization server id>
     audience: <audience defined in authorization server>
     clientId: <oidc application client id>
+    clientSecret: <oidc application client secret>
     rolesClaim: groups
-    redirectUri: <redirect uri this app homepage>
+    redirectUri: /authorization-code/callback
+security:
+  oauth2:
+    client:
+      userAuthorizationUri: http://localhost:${server.port}/login

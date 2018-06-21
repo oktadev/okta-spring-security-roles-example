@@ -1,7 +1,7 @@
 package com.okta.okta.spring.example;
 
 /*
-Copyright 2017 Okta, Inc.
+Copyright 2018 Okta, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class OktaSpringSecurityRolesExampleApplication {
 
     private final OktaOAuth2Properties oktaOAuth2Properties;
 
-    public OktaSpringSecurityRolesExampleApplication(CustomAccessDeniedHandler customAccessDeniedHandler, OktaOAuth2Properties oktaOAuth2Properties) {
+    public OktaSpringSecurityRolesExampleApplication(OktaOAuth2Properties oktaOAuth2Properties) {
         this.oktaOAuth2Properties = oktaOAuth2Properties;
     }
 
@@ -85,7 +85,8 @@ public class OktaSpringSecurityRolesExampleApplication {
         private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
         OAuth2SecurityConfigurerAdapter(
-            Filter oktaSsoFilter, OktaOAuth2Properties oktaOAuth2Properties,
+            Filter oktaSsoFilter,
+            OktaOAuth2Properties oktaOAuth2Properties,
             CustomAccessDeniedHandler customAccessDeniedHandler
         ) {
             this.oktaSsoFilter = oktaSsoFilter;
