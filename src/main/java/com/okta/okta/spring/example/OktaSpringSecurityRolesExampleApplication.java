@@ -18,6 +18,7 @@ limitations under the License.
 
 
 import com.okta.okta.spring.example.controller.CustomAccessDeniedHandler;
+import com.okta.okta.spring.example.interceptor.RequestResponseLoggingInterceptor;
 import com.okta.spring.config.OktaOAuth2Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,6 +27,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.client.BufferingClientHttpRequestFactory;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
@@ -34,6 +38,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.client.token.AccessTokenProvider;
+import org.springframework.security.oauth2.client.token.AccessTokenProviderChain;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeAccessTokenProvider;
 import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.provider.expression.OAuth2MethodSecurityExpressionHandler;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
@@ -42,6 +49,7 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
 import javax.servlet.Filter;
+import java.util.Collections;
 
 @SpringBootApplication
 @EnableOAuth2Sso
@@ -68,12 +76,28 @@ public class OktaSpringSecurityRolesExampleApplication {
         AuthorizationCodeResourceDetails authorizationCodeResourceDetails,
         ResourceServerTokenServices tokenServices
     ) {
-        OAuth2ClientAuthenticationProcessingFilter oktaFilter = new OAuth2ClientAuthenticationProcessingFilter(oktaOAuth2Properties.getRedirectUri());
+        OAuth2ClientAuthenticationProcessingFilter oktaFilter =
+            new OAuth2ClientAuthenticationProcessingFilter(oktaOAuth2Properties.getRedirectUri());
         oktaFilter.setApplicationEventPublisher(applicationEventPublisher);
+
         OAuth2RestTemplate oktaTemplate = new OAuth2RestTemplate(authorizationCodeResourceDetails, oauth2ClientContext);
+        setupTemplateLogging(oktaTemplate);
+
         oktaFilter.setRestTemplate(oktaTemplate);
         oktaFilter.setTokenServices(tokenServices);
         return oktaFilter;
+    }
+
+    // purely for logging requests and responses to get the access token
+    private void setupTemplateLogging(OAuth2RestTemplate oktaTemplate) {
+        ClientHttpRequestFactory requestFactory =
+            new BufferingClientHttpRequestFactory(new SimpleClientHttpRequestFactory());
+        AuthorizationCodeAccessTokenProvider authCodeAccessTokenProvider = new AuthorizationCodeAccessTokenProvider();
+        authCodeAccessTokenProvider.setRequestFactory(requestFactory);
+        authCodeAccessTokenProvider.setInterceptors(Collections.singletonList(new RequestResponseLoggingInterceptor()));
+        AccessTokenProvider accessTokenProvider =
+            new AccessTokenProviderChain(Collections.singletonList(authCodeAccessTokenProvider));
+        oktaTemplate.setAccessTokenProvider(accessTokenProvider);
     }
 
     @Configuration

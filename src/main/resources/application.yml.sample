@@ -19,6 +19,7 @@ logging:
     root: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
+    com.okta.okta.spring.example.interceptor: DEBUG
 server:
   port: 8080
   servlet:
