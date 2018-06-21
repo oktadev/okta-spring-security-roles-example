@@ -16,28 +16,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import com.okta.okta.spring.example.config.AppProperties;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.okta.spring.config.OktaClientProperties;
+import com.okta.spring.config.OktaOAuth2Properties;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import java.security.Principal;
 
 @Controller
 public class SecureController {
 
-    private AppProperties appProperties;
+    public static final String AUTHENTICATED_PATH = "/authenticated";
 
-    @Autowired
-    public SecureController(AppProperties appProperties) {
-        this.appProperties = appProperties;
+    private final OktaOAuth2Properties oktaOAuth2Properties;
+    private final OktaClientProperties oktaClientProperties;
+
+    public SecureController(OktaOAuth2Properties oktaOAuth2Properties, OktaClientProperties oktaClientProperties) {
+        this.oktaOAuth2Properties = oktaOAuth2Properties;
+        this.oktaClientProperties = oktaClientProperties;
     }
 
-    @RequestMapping("/authenticated")
-    public String authenticated(Model model) {
-        model.addAttribute("appProperties", appProperties);
+    @RequestMapping(AUTHENTICATED_PATH)
+    @PreAuthorize("#oauth2.hasScope('openid')")
+    public String authenticated() {
         return "authenticated";
     }
 

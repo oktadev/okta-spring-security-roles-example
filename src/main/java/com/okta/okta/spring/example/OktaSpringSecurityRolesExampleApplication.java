@@ -18,34 +18,39 @@ limitations under the License.
 
 
 import com.okta.okta.spring.example.controller.CustomAccessDeniedHandler;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.okta.spring.config.OktaOAuth2Properties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.GlobalMethodSecurityConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.authentication.TokenExtractor;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.oauth2.client.OAuth2ClientContext;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.client.token.grant.code.AuthorizationCodeResourceDetails;
 import org.springframework.security.oauth2.provider.expression.OAuth2MethodSecurityExpressionHandler;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.Filter;
 
 @SpringBootApplication
+@EnableOAuth2Sso
 public class OktaSpringSecurityRolesExampleApplication {
 
-    private final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+    private final OktaOAuth2Properties oktaOAuth2Properties;
 
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
-
-    @Autowired
-    public OktaSpringSecurityRolesExampleApplication(CustomAccessDeniedHandler customAccessDeniedHandler) {
-        this.customAccessDeniedHandler = customAccessDeniedHandler;
+    public OktaSpringSecurityRolesExampleApplication(CustomAccessDeniedHandler customAccessDeniedHandler, OktaOAuth2Properties oktaOAuth2Properties) {
+        this.oktaOAuth2Properties = oktaOAuth2Properties;
     }
 
     @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -57,41 +62,56 @@ public class OktaSpringSecurityRolesExampleApplication {
     }
 
     @Bean
-    protected ResourceServerConfigurerAdapter resourceServerConfigurerAdapter() {
-        return new ResourceServerConfigurerAdapter() {
+    protected Filter oktaSsoFilter(
+        ApplicationEventPublisher applicationEventPublisher,
+        OAuth2ClientContext oauth2ClientContext,
+        AuthorizationCodeResourceDetails authorizationCodeResourceDetails,
+        ResourceServerTokenServices tokenServices
+    ) {
+        OAuth2ClientAuthenticationProcessingFilter oktaFilter = new OAuth2ClientAuthenticationProcessingFilter(oktaOAuth2Properties.getRedirectUri());
+        oktaFilter.setApplicationEventPublisher(applicationEventPublisher);
+        OAuth2RestTemplate oktaTemplate = new OAuth2RestTemplate(authorizationCodeResourceDetails, oauth2ClientContext);
+        oktaFilter.setRestTemplate(oktaTemplate);
+        oktaFilter.setTokenServices(tokenServices);
+        return oktaFilter;
+    }
 
-            @Override
-            public void configure(HttpSecurity http) throws Exception {
-                http.authorizeRequests()
-                    .antMatchers("/", "/login", "/images/**").permitAll()
-                    .and()
-                    .exceptionHandling().accessDeniedHandler(customAccessDeniedHandler);
-            }
+    @Configuration
+    @Order(99)
+    static class OAuth2SecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
-            @Override
-            public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-                resources.tokenExtractor(new TokenExtractor() {
+        private final Filter oktaSsoFilter;
+        private final OktaOAuth2Properties oktaOAuth2Properties;
+        private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-                    @Override
-                    public Authentication extract(HttpServletRequest request) {
-                        String tokenValue = findCookie(ACCESS_TOKEN_COOKIE_NAME, request.getCookies());
-                        if (tokenValue == null) { return null; }
+        OAuth2SecurityConfigurerAdapter(
+            Filter oktaSsoFilter, OktaOAuth2Properties oktaOAuth2Properties,
+            CustomAccessDeniedHandler customAccessDeniedHandler
+        ) {
+            this.oktaSsoFilter = oktaSsoFilter;
+            this.oktaOAuth2Properties = oktaOAuth2Properties;
+            this.customAccessDeniedHandler = customAccessDeniedHandler;
+        }
 
-                        return new PreAuthenticatedAuthenticationToken(tokenValue, "");
-                    }
+        @Bean
+        protected AuthenticationEntryPoint authenticationEntryPoint() {
+            return new LoginUrlAuthenticationEntryPoint(oktaOAuth2Properties.getRedirectUri());
+        }
 
-                    private String findCookie(String name, Cookie[] cookies) {
-                        if (name == null || cookies == null) { return null; }
-                        for (Cookie cookie : cookies) {
-                            if (name.equals(cookie.getName())) {
-                                return cookie.getValue();
-                            }
-                        }
-                        return null;
-                    }
-                });
-            }
-        };
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http
+                .addFilterAfter(oktaSsoFilter, AbstractPreAuthenticatedProcessingFilter.class)
+                .exceptionHandling()
+                    .authenticationEntryPoint(authenticationEntryPoint())
+                    .accessDeniedHandler(customAccessDeniedHandler)
+                .and()
+                    .authorizeRequests()
+                    .antMatchers("/", "/login", "/images/**", "/favicon.ico").permitAll()
+                .and()
+                    .logout()
+                    .logoutSuccessUrl("/");
+        }
     }
 
     public static void main(String[] args) {

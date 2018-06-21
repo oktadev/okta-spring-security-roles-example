@@ -16,48 +16,27 @@
 <!doctype html>
 
 <html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<head>
-    <!--/*/ <th:block th:include="fragments/head :: head"/> /*/-->
-</head>
+    <head>
+        <!--/*/ <th:block th:include="fragments/head :: head"/> /*/-->
+    </head>
 
-<body>
+    <body>
+        <div id="container" class="row">
+            <div class="box col-md-10 col-md-offset-1">
+                <div class="okta-header">
+                    <img width="300px" src="/images/OktaLogo.png"/>
+                </div>
 
-<div id="container" class="row">
-    <div class="box col-md-10 col-md-offset-1">
-        <div class="okta-header">
-            <img width="300px" src="/images/OktaLogo.png"/>
+                <h3 th:inline="text">Hello, <span sec:authentication="principal">Bob</span></h3>
+
+                <form method="post" th:action="@{/logout}" th:if="${#authorization.expression('isAuthenticated()')}">
+                    <a href="/users" class="btn btn-primary">Users Only</a>
+                    <a href="/admins" class="btn btn-warning">Admins Only</a>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button id="logout-button" type="submit" class="btn btn-danger">Logout</button>
+                </form>
+
+            </div>
         </div>
-
-        <h3 th:inline="text">Hello, <span sec:authentication="principal">Bob</span></h3>
-
-        <a href="/users" class="btn btn-primary">Users Only</a>
-        <a href="/admins" class="btn btn-warning">Admins Only</a>
-        <a href="#" id="logout" class="btn btn-danger">Logout</a>
-    </div>
-</div>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    $( document ).ready(function() {
-        var data = {
-            baseUrl: [[${appProperties.baseUrl}]],
-            clientId: [[${appProperties.clientId}]],
-            redirectUri: [[${appProperties.redirectUri}]],
-            authParams: {
-                issuer: [[${appProperties.issuer}]],
-                responseType: ['token']
-            }
-        };
-        window.oktaSignIn = new OktaSignIn(data);
-
-        $('#logout').click(function () {
-            oktaSignIn.signOut(function () {
-                oktaSignIn.tokenManager.clear();
-                window.location.href = "/";
-            });
-        });
-    });
-    /*]]>*/
-</script>
-</body>
+    </body>
 </html>
