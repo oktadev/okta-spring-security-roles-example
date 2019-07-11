@@ -15,7 +15,7 @@
   -->
 <!doctype html>
 
-<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head>
     <!--/*/ <th:block th:include="fragments/head :: head"/> /*/-->
 </head>
@@ -28,7 +28,7 @@
             <img width="300px" src="/images/OktaLogo.png"/>
         </div>
 
-        <h3 th:inline="text">Hello, <span sec:authentication="principal">Bob</span></h3>
+        <h3 th:inline="text">Hello, <span th:text="${#authentication.principal.attributes.name}"></span></h3>
 
         <h4 sec:authorize="hasAuthority('users')">You are in the users group</h4>
         <h4 sec:authorize="hasAuthority('admins')">You are in the admins group</h4>
