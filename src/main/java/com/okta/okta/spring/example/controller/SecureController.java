@@ -26,7 +26,6 @@ public class SecureController {
     public static final String AUTHENTICATED_PATH = "/authenticated";
 
     @RequestMapping(AUTHENTICATED_PATH)
-    @PreAuthorize("#oauth2.hasScope('openid')")
     public String authenticated() {
         return "authenticated";
     }

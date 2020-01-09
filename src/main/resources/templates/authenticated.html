@@ -15,7 +15,7 @@
   -->
 <!doctype html>
 
-<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
     <head>
         <!--/*/ <th:block th:include="fragments/head :: head"/> /*/-->
     </head>
@@ -27,9 +27,9 @@
                     <img width="300px" src="/images/OktaLogo.png"/>
                 </div>
 
-                <h3 th:inline="text">Hello, <span sec:authentication="principal">Bob</span></h3>
+                <h3 th:inline="text">Hello, <span th:text="${#authentication.principal.attributes.name}"></span></h3>
 
-                <form method="post" th:action="@{/logout}" th:if="${#authorization.expression('isAuthenticated()')}">
+                <form method="post" th:action="@{/logout}">
                     <a href="/users" class="btn btn-primary">Users Only</a>
                     <a href="/admins" class="btn btn-warning">Admins Only</a>
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />

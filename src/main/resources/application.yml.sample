@@ -14,28 +14,9 @@
 # limitations under the License.
 #
 
-logging:
-  level:
-    root: INFO
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    com.okta.okta.spring.example.interceptor: DEBUG
-server:
-  port: 8080
-  servlet:
-      session:
-        tracking-modes: cookie
 okta:
-  client:
-    orgUrl: <your okta tenant>
   oauth2:
-    issuer: https://<your okta tenant>/oauth2/<authorization server id>
-    audience: <audience defined in authorization server>
-    clientId: <oidc application client id>
-    clientSecret: <oidc application client secret>
-    rolesClaim: groups
-    redirectUri: /authorization-code/callback
-security:
-  oauth2:
-    client:
-      userAuthorizationUri: http://localhost:${server.port}/login
+    issuer: https://<your okta org url>/oauth2/<authorization server id>
+    clientId: <oidc client id>
+    clientSecret: <oid client secret>
+    audience: <authorization server defined audience>
